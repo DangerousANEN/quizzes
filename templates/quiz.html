@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+</head>
+<body>
+    <nav>
+        <a href="{{ url_for('index') }}">Home</a>
+        <a href="{{ url_for('quiz') }}">Quiz</a>
+        {% if current_user.is_authenticated %}
+        <a href="{{ url_for('account') }}">Account</a>
+        {% else %}
+        <a href="{{ url_for('login') }}">Log In</a>
+        <a href="{{ url_for('register') }}">Register</a>
+        {% endif %}
+    </nav>
+    <h1>{{ title }}</h1>
+    <form method="POST">
+        {% for question in questions %}
+        <p>{{ question }}</p>
+        {% for option in options[question] %}
+        <label>
+            <input type="radio" name="{{ question }}" value="{{ option }}">
+            {{ option }}
+        </label>
+        {% endfor %}
+        {% endfor %}
+        <br>
+        <button type="submit">Submit</button>
+    </form>
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <ul>
+        {% for message in messages %}
+        <li>{{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    {% endwith %}
+</body>
+</html>
