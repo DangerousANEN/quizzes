@@ -5,7 +5,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField
 from wtforms.validators import DataRequired, Email, EqualTo
 
-app = Flask(__name__, template_folder='templates')
+app = Flask(__name__, template_folder='static')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 app.config['SECRET_KEY'] = 'super-secret-key'
 db = SQLAlchemy(app)
@@ -17,6 +17,11 @@ class User(db.Model, UserMixin):
     username = db.Column(db.String(50), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(120), nullable=False)
+
+    def __init__(self, username, email, password):
+        self.username = username
+        self.email = email
+        self.password = password
 
 
 @login_manager.user_loader
@@ -53,10 +58,10 @@ def index():
 def register():
     form = RegistrationForm()
     if form.validate_on_submit():
-        user = User()
+        user = User(username=form.username.data, email=form.email.data, password=form.password.data)
         db.session.add(user)
         db.session.commit()
-        flash('Your account has been created!', 'success')
+        flash('Ваш аккаунт успешно создан!', 'success')
         return redirect(url_for('login'))
     return render_template('register.html', title='Register', form=form)
 
@@ -68,10 +73,10 @@ def login():
         user = User.query.filter_by(username=form.username.data).first()
         if user and user.password == form.password.data:
             login_user(user, remember=form.remember_me.data)
-            flash('You have been logged in!', 'success')
+            flash('Вы успешно вошли', 'success')
             return redirect(url_for('account'))
         else:
-            flash('Invalid username or password', 'danger')
+            flash('Неверное имя или пароль', 'danger')
     return render_template('login.html', title='Sign In', form=form)
 
 
@@ -84,27 +89,45 @@ def account():
         if user and user.password == form.password.data:
             user.username = form.username.data
             db.session.commit()
-            flash('Your changes have been saved!', 'success')
+            flash('Ваши изменения сохранены', 'success')
             return redirect(url_for('account'))
         else:
-            flash('Invalid password', 'danger')
+            flash('Неверный пароль', 'danger')
     return render_template('account.html', title='My Account', form=form)
 
 
 @app.route('/quiz', methods=['GET', 'POST'])
 def quiz():
-    questions = ['What is the capital of France?', 'What is the highest mountain in the world?']
+    questions = ['Какой город является столицей Франции?',
+                 'Какая самая высокая гора в мире?',
+                 'Какие грибы привели к созданию пенициллина?',
+                 'В какой стране мира самая высокая продолжительность жизни?',
+                 'В каком языке нет знаков препинания?',
+                 'Какая страна охватывает максимальное количество часовых поясов?'
+]
     options = {
-        'What is the capital of France?': ['Paris', 'Berlin', 'London'],
-        'What is the highest mountain in the world?': ['Mount Everest', 'Mount Kilimanjaro', 'Mount Fuji']
+        'Какой город является столицей Франции?': ['Париж', 'Берлин', 'Лондон'],
+        'Какая самая высокая гора в мире?': ['Гора Эверест', 'Гора Килиманджаро', 'Гора Фудзияма'],
+        'Какие грибы привели к созданию пенициллина?': ['Поганки', "Плесень", 'Мухомор'],
+        'В какой стране мира самая высокая продолжительность жизни?': ['Россия', 'Южная Корея', 'Китай'],
+        'В каком языке нет знаков препинания?': ['Китайский', 'Киргизский', 'Тайский'],
+        'Какая страна охватывает максимальное количество часовых поясов?': ['Франция', 'Россия', "Китай"]
+    }
+    correct = {
+        'Какой город является столицей Франции?': "Париж",
+        'Какая самая высокая гора в мире?': 'Гора Эверест',
+        'Какие грибы привели к созданию пенициллина?': "Плесень",
+        'В какой стране мира самая высокая продолжительность жизни?': 'Китай',
+        'В каком языке нет знаков препинания?': 'Тайский',
+        'Какая страна охватывает максимальное количество часовых поясов?': 'Франция'
     }
     if request.method == 'POST':
         score = 0
         for question in questions:
             answer = request.form.get(question)
-            if answer and answer in options[question]:
+            if answer == correct[question]:
                 score += 1
-        flash(f'You have scored {score} out of {len(questions)}', 'info')
+        flash(f'Вы заработали {score} из {len(questions)} очков',  'info')
         return redirect(url_for('quiz'))
     return render_template('quiz.html', title='Quiz', questions=questions, options=options)
 
