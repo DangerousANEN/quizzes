@@ -1,20 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>{{ title }}</title>
-</head>
-<body>
-    <nav>
-        <a href="{{ url_for('index') }}">Home</a>
-        <a href="{{ url_for('quiz') }}">Quiz</a>
-        {% if current_user.is_authenticated %}
-        <a href="{{ url_for('account') }}">Account</a>
-        {% else %}
-        <a href="{{ url_for('login') }}">Log In</a>
-        <a href="{{ url_for('register') }}">Register</a>
-        {% endif %}
-    </nav>
+{% extends 'base.html' %}
+
+{% block content %}
     <h1>{{ title }}</h1>
     <form method="POST">
         {% for question in questions %}
@@ -38,5 +24,4 @@
     </ul>
     {% endif %}
     {% endwith %}
-</body>
-</html>
+{% endblock %}
